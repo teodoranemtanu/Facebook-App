@@ -1,0 +1,99 @@
+﻿@model FbApp.Models.IndexViewModel
+@using Microsoft.AspNet.Identity
+
+@{
+    ViewBag.Title = "Manage";
+}
+
+<h2>@ViewBag.Title.</h2>
+
+<p class="text-success">@ViewBag.StatusMessage</p>
+<div>
+    <h4>Change your account settings</h4>
+    <hr />
+    <dl class="dl-horizontal">
+        <dt> Profile Photo: </dt>
+        <dd>
+            <img src="@Url.Action("UserPhotos", "Home" )" style="
+            width:160px;
+            height:160px;
+            background: #FFFFFF;
+            margin: auto;
+            margin-bottom: 20px;
+            border-radius: 100px;
+            padding: 6px;
+            box-shadow: 0px 0px 20px #888;" />
+        </dd>
+    </dl>
+
+    @using (Html.BeginForm("UpdateProfilePicture", "Manage", FormMethod.Post, new { @class = "form-horizontal", role = "form", enctype = "multipart/form-data" }))
+    {
+        <div class="form-group">
+            @Html.LabelFor(m => m.ProfilePhoto, new { @class = "col-md-2 control-label" })
+            <div class="col-md-10">
+                <input type="file" name="ProfilePhoto" id="fileUpload" accept=".png,.jpg,.jpeg,.gif,.tif" />
+                <br />
+                <input type="submit" value="Save" formmethod="post" class="btn btn-sm btn-success" />
+            </div>
+        </div>
+    }
+
+    @using (Html.BeginForm("UpdateProfileInfo", "Manage", new { @class = "form-horizontal" }))
+    {
+        @Html.HttpMethodOverride(HttpVerbs.Put);
+
+        <br />
+        @Html.LabelFor(m => m.FirstName, new { @class = "col-md-2 control-label" })
+        @Html.TextBoxFor(m => m.FirstName, new { @class = "form-control", @name = "FirstName" })
+        @Html.HiddenFor(m => m.FirstName)
+        <br />
+        @Html.LabelFor(m => m.LastName, new { @class = "col-md-2 control-label" })
+        @Html.TextBoxFor(m => m.LastName, new { @class = "form-control", @name = "LastName" })
+        @Html.HiddenFor(m => m.LastName)
+        <br />
+        @Html.LabelFor(m => m.Email, new { @class = "col-md-2 control-label" })
+        @Html.TextBoxFor(m => m.Email, new { @class = "form-control", @name = "E-mail" })
+        @Html.HiddenFor(m => m.Email)
+        <br />
+        @Html.LabelFor(m => m.Age, new { @class = "col-md-2 control-label" })
+        @Html.TextBoxFor(m => m.Age, new { @type = "number", @min = "0", @max = "130", @step = "1", @class = "form-control", @name = "Age" })
+        @Html.HiddenFor(m => m.Age)
+        <br />
+
+        @Html.LabelFor(m => m.Privacy, new { @class = "col-md-2 control-label" })
+
+        if (@ViewBag.Privacy == 0)
+        {
+            <select name="Privacy" class="form-control">
+                <option value="Private">Private</option>
+                <option value="Public" selected>Public</option>
+            </select>
+        }
+        else
+        {
+            <select name="Privacy" class="form-control">
+                <option value="Private" selected>Private</option>
+                <option value="Public">Public</option>
+            </select>
+        }
+        <br />
+        <label class="col-md-2 control-label"> Password:</label>
+
+        if (Model.HasPassword)
+        {
+            @Html.ActionLink("Change your password", "ChangePassword")
+        }
+        else
+        {
+            @Html.ActionLink("Create", "SetPassword")
+        }
+
+        <br />
+        <br />
+        <button class="btn btn-sm btn-success">
+            Modifica Informatii Profil
+        </button>
+    }
+    <br />
+
+</div>

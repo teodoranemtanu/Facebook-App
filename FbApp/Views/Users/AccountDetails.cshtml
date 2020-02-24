@@ -1,0 +1,325 @@
+﻿@model FbApp.Dtos.UserAccountModel
+@using FbApp.Utilities
+@using FbApp.Models
+@using Microsoft.AspNet.Identity
+
+<div class="row">
+    <div class="col-sm-3 well text-center">
+        <div class="well">
+            <p>
+                <a href="/Users/AccountDetails/@Model.Id">
+                    <strong>@Model.FirstName @Model.LastName</strong>
+                </a>
+            </p>
+            <img src="@Model.ProfilePicture.ToRenderablePictureString()" class="img-circle" height="100" width="100" alt="ProfilePicture">
+        </div>
+        @if (ViewData[GlobalConstants.Authorization] == GlobalConstants.PublicAuthorization ||
+            ViewData[GlobalConstants.Authorization] == GlobalConstants.FriendAuthorization)
+        {
+            <div class="well">
+                <p><strong>Albums</strong></p>
+                <p>
+                    @*@Html.BeginForm("Show", "Album", new {)*@
+                    <a href="/Album/Show/@Model.Id">
+                        <strong>Go to list</strong>
+                    </a>
+                </p>
+            </div>
+        }
+        @if (ViewData[GlobalConstants.Authorization] == GlobalConstants.FullAuthorization)
+        {
+            <div class="well">
+                <p><a href="#"><strong>Friends</strong></a></p>
+                <p>
+                    @if (Model.Friends.Any())
+                    {
+                        foreach (var friend in Model.Friends)
+                        {
+                            <div class="row">
+                                <a href="/Users/AccountDetails/@friend.Id">@friend.FullName</a>
+                            </div>
+                        }
+                    }
+                </p>
+            </div>
+            if (Model.FriendRequestReceived.Any(fr => fr.FriendRequestStatus == FriendRequestStatus.Pending))
+            {
+                <div class="alert alert-success fade in">
+                    <a href="#" class="close" data-dismiss="alert" aria-label="close">×</a>
+                    <p><strong>Hey!</strong></p>
+                    You have new friend requests. Find out who.
+                </div>
+                foreach (var friendRequest in Model.FriendRequestReceived.Where(fr => fr.FriendRequestStatus == FriendRequestStatus.Pending))
+                {
+                    <p>
+                        <a href="/Users/AccountDetails/@friendRequest.SenderId">
+                            <strong>@friendRequest.SenderFullName</strong>
+                        </a>
+                    </p>
+                }
+            }
+            <div class="well">
+                <p><strong>Albums</strong></p>
+                <p>
+                    @*@Html.BeginForm("Show", "Album", new {)*@
+                    <a href="/Album/Show/@User.Identity.GetUserId()">
+                        <strong>Go to list</strong>
+                    </a>
+                </p>
+            </div>
+        }
+    </div>
+    <div class="col-sm-6">
+        @if (ViewData[GlobalConstants.Authorization] == GlobalConstants.FullAuthorization)
+        {
+            <div class="row">
+                <div class="col-sm-12">
+                    <div class="panel panel-default text-left">
+                        <div class="panel-body">
+                            <p contenteditable="true">What do you think @(User.Identity.Name)?</p>
+                            <a class="btn btn-primary btn-sm" href="/Posts/Create">Create Post</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-sm-12">
+                    <div class="panel panel-default text-left">
+                        <div class="panel-body">
+                            <p contenteditable="true"> Do you want a new album?</p>
+                            <a class="btn btn-primary btn-sm" href="/Album/Create">Create album</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-sm-12">
+                    <div class="panel panel-default text-left">
+                        <div class="panel-body">
+                            <p contenteditable="true">Stay close to your friends:</p>
+                            <a class="btn btn-primary btn-sm" href="/Group/Create">Create a group</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+
+        @if (ViewData[GlobalConstants.Authorization] == GlobalConstants.FullAuthorization ||
+            ViewData[GlobalConstants.Authorization] == GlobalConstants.FriendAuthorization
+            || ViewData[GlobalConstants.Authorization] == GlobalConstants.PublicAuthorization)
+        {
+            if (ViewData[GlobalConstants.Authorization] == GlobalConstants.PublicAuthorization)
+            {
+                <div class="well">
+                    <div class="row">
+                        <div class="col-sm-12 text-center">
+                            <h4>Add @Model.FirstName to your friend list</h4>
+                        </div>
+                    </div>
+                    <div class="row">
+                        @if (Model.FriendRequestSent.Any(fr => fr.ReceiverId == User.Identity.GetUserId()))
+                        {
+                            <div class="col-sm-12 text-center">
+                                <a href="/FriendRequests/Accept/@Model.Id/@User.Identity.GetUserId()"
+                                   class="btn btn-success btn-sm">Accept Friend Request</a>
+                                <a href="/FriendRequests/Decline/@Model.Id/@User.Identity.GetUserId()"
+                                   class="btn btn-danger btn-sm">Decline Friend Request</a>
+                            </div>
+
+                        }
+                        else if (Model.FriendRequestReceived.Any(fr => fr.SenderId == User.Identity.GetUserId()))
+                        {
+                            <div class="col-sm-12 text-center">
+                                <h4 style="color:darkolivegreen"> Your friend request is @Model.FriendRequestReceived.FirstOrDefault(fr => fr.SenderId == User.Identity.GetUserId()).FriendRequestStatus.ToString()</h4>
+                            </div>
+
+                        }
+                        else
+                        {
+                            <div class="col-sm-12 text-center">
+                                <a href="/FriendRequests/AddFriend/@User.Identity.GetUserId()/@Model.Id"
+                                   class="btn btn-primary btn-sm">Add Friend</a>
+                            </div>
+
+                        }
+                    </div>
+                </div>
+            }
+            if (Model.Posts.Any())
+            {
+                foreach (var post in Model.Posts)
+                {
+
+                    <div class="well">
+                        <div class="row">
+                            <div class="col-sm-2">
+                                <img src="@post.UserProfilePicture.ToRenderablePictureString()" class="img-circle pull-left" height="55" width="55" alt="Avatar">
+                            </div>
+                            <div class="col-sm-10 text-left">
+                                <div class="row">
+                                    <a href="/Users/AccountDetails/@post.UserId">
+                                        <strong>@post.UserFullName</strong>
+                                    </a>
+
+                                    <a>is feeling  @post.Feeling.ToString()</a>
+
+                                </div>
+                                <div class="row">
+                                    <small>@post.Date.ToShortDateString()</small>
+                                </div>
+                                <div class="row">
+                                    <small>Album: @post.AlbumId</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-sm-12">
+                                <p>@post.Text</p>
+                            </div>
+                        </div>
+
+                        @if (!string.IsNullOrEmpty(post.Photo.ToRenderablePictureString()))
+                        {
+                            <div class="row">
+                                <img src="@post.Photo.ToRenderablePictureString()" class="img-responsive" style="width: 100%" alt="Avatar">
+                            </div>
+                        }
+
+                        @if (ViewData[GlobalConstants.Authorization] == GlobalConstants.FullAuthorization)
+                        {
+                            <div class="row">
+                                <div class="col-sm-4">
+
+                                    <a href="/Posts/Edit/@post.Id" class="btn btn-warning btn-sm">Edit</a>
+                                    <a href="/Posts/Delete/@post.Id" class="btn btn-danger btn-sm">Delete</a>
+                                </div>
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="row">
+                                <div class="col-sm-4">
+                                    <a href="/Posts/Like/@post.Id" class="btn btn-default btn-sm">
+                                        <span class="glyphicon glyphicon-thumbs-up"></span> Like
+                                    </a>
+                                    <a href="/Comment/Create/@post.Id" class="btn btn-default btn-sm">Comment</a>
+                                </div>
+                            </div>
+                        }
+                        <div class="row">
+                            <div class="col-sm-4">
+                                <small>@post.Likes Likes / @post.Comments.Count() Comments</small>
+                            </div>
+                        </div>
+
+                        @if (post.Comments.Any())
+                        {
+                            <hr />
+                            @Html.Partial("_PostComments", post.Comments)
+                        }
+                    </div>
+                }
+            }
+            else
+            {
+                <div class="well">
+                    <div class="row">
+                        <div class="col-sm-12 text-center">
+                            <h4>@Model.FirstName doesnt have any posts!</h4>
+                        </div>
+                    </div>
+                </div>
+
+            }
+        }
+        else if (ViewData[GlobalConstants.Authorization] == GlobalConstants.NoAuthorization)
+        {
+            <div class="well">
+                <div class="row">
+                    <div class="col-sm-12 text-center">
+                        <h4>You must be friend with @Model.FirstName in order to see his posts!</h4>
+                    </div>
+                </div>
+                <div class="row">
+                    @if (Model.FriendRequestSent.Any(fr => fr.ReceiverId == User.Identity.GetUserId()))
+                    {
+                        <div class="col-sm-12 text-center">
+                            <a href="/FriendRequests/Accept/@Model.Id/@User.Identity.GetUserId()"
+                               class="btn btn-success btn-sm">Accept Friend Request</a>
+                            <a href="/FriendRequests/Decline/@Model.Id/@User.Identity.GetUserId()"
+                               class="btn btn-danger btn-sm">Decline Friend Request</a>
+                        </div>
+
+                    }
+                    else if (Model.FriendRequestReceived.Any(fr => fr.SenderId == User.Identity.GetUserId()))
+                    {
+                        <div class="col-sm-12 text-center">
+                            <h4 style="color:darkolivegreen">Your friend request is @Model.FriendRequestReceived.FirstOrDefault(fr => fr.SenderId == User.Identity.GetUserId()).FriendRequestStatus.ToString()</h4>
+                        </div>
+
+                    }
+                    else
+                    {
+                        <div class="col-sm-12 text-center">
+                            <a href="/FriendRequests/AddFriend/@User.Identity.GetUserId()/@Model.Id"
+                               class="btn btn-primary btn-sm">Add Friend</a>
+                        </div>
+
+                    }
+                </div>
+            </div>
+        }
+        else
+        {
+            <div class="well">
+                <div class="row">
+                    <div class="col-sm-12 text-center">
+                        <h4>@Model.FirstName doesnt have any posts!</h4>
+                    </div>
+                </div>
+            </div>
+        }
+
+    </div>
+    <div class="col-sm-3 well">
+        @if (ViewData[GlobalConstants.Authorization] == GlobalConstants.FullAuthorization)
+        {
+            <div class="thumbnail">
+                <p class="text-center"><strong>Chat With Your Friends:</strong></p>
+                <img src="http://vectorlogo4u.com/wp-content/uploads/2015/10/Facebook-Messenger-vector-logo-720x340.png" alt="Messanger" width="400" height="300">
+            </div>
+            <div class="dropdown">
+                <button class="btn btn-primary dropdown-toggle" type="button" data-toggle="dropdown">
+                    Messanger
+                    <span class="caret"></span>
+                </button>
+                <ul class="dropdown-menu text-center">
+                    @if (Model.Friends.Any())
+                    {
+                        foreach (var friend in Model.Friends)
+                        {
+                            <li>
+                                <a href="/Messanger/Index/@friend.Id">@friend.FullName</a>
+                            </li>
+                        }
+                    }
+                    else
+                    {
+                        <li><a href="#">You need to have friends!</a></li>
+                    }
+                </ul>
+            </div>
+            <br>
+            <div class="well text-center">
+                <p><strong>My groups</strong></p>
+                <p>
+                    @*@Html.BeginForm("Show", "Album", new {)*@
+                    <a href="/Group/Show/@User.Identity.GetUserId()">
+                        <strong>Go to list</strong>
+                    </a>
+                </p>
+            </div>
+
+        }
+    </div>
+</div>
